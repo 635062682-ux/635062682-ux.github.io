@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>终端许可业务管理系统</title>
+  <style>
+    :root {
+      --bg: #eef3f8;
+      --panel: #fff;
+      --ink: #172033;
+      --muted: #66758a;
+      --line: #d8e1ec;
+      --navy: #10243f;
+      --blue: #1d6fe5;
+      --green: #16a36a;
+      --amber: #d88a00;
+      --red: #d84d4d;
+      --cyan: #06a8c7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      background: #f6f9fc;
+    }
+
+    aside {
+      background: var(--navy);
+      color: #fff;
+      padding: 20px 10px;
+      min-height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      margin: 0 6px 24px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #24c6dc, var(--blue));
+      display: grid;
+      place-items: center;
+    }
+
+    .brand-mark::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      border-left-color: transparent;
+    }
+
+    .brand b { display: block; font-size: 14px; }
+    .brand span { color: rgba(255,255,255,.62); font-size: 12px; }
+
+    .nav-title {
+      color: rgba(255,255,255,.48);
+      font-size: 12px;
+      font-weight: 800;
+      margin: 20px 10px 8px;
+    }
+
+    .nav-item {
+      height: 40px;
+      border-radius: 8px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,.78);
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+
+    .nav-item.active {
+      background: rgba(29,111,229,.24);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 68px 1fr;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 26px;
+    }
+
+    .page-title b { display: block; font-size: 18px; }
+    .page-title span { color: var(--muted); font-size: 13px; }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .global-search {
+      width: 280px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 0 12px;
+      color: var(--ink);
+    }
+
+    .btn {
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .btn.danger {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+
+    .content { padding: 20px 26px 26px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 92px;
+      box-shadow: 0 10px 24px rgba(31,46,71,.06);
+    }
+
+    .metric span { color: var(--muted); font-size: 13px; }
+    .metric strong { display: block; margin-top: 8px; font-size: 25px; }
+    .metric small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(31,46,71,.06);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      min-height: 58px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, #fff, #fafcff);
+    }
+
+    .panel-head h2 { margin: 0; font-size: 17px; }
+
+    .tabs { display: flex; gap: 8px; }
+    .tab {
+      height: 30px;
+      border: 0;
+      border-radius: 7px;
+      background: #f2f6fb;
+      color: var(--muted);
+      padding: 0 11px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tab.active { background: #eaf3ff; color: var(--blue); }
+
+    .filters {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) 110px;
+      gap: 10px;
+    }
+
+    .filters select, .filters input {
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 0 11px;
+      color: var(--ink);
+      min-width: 0;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid #edf1f6;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    th {
+      color: var(--muted);
+      background: #f8fafc;
+      font-weight: 900;
+    }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: #f8fbff; }
+    tbody tr.selected { background: #eef5ff; }
+
+    .type { color: var(--blue); font-weight: 900; }
+    .money { color: var(--amber); font-weight: 900; }
+
+    .status {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .ok { background: #e9f8f1; color: #0f8050; }
+    .warn { background: #fff4db; color: #9b6400; }
+    .run { background: #eaf3ff; color: #155bb5; }
+    .bad { background: #fff0f0; color: #bd3636; }
+
+    .side { display: grid; gap: 16px; }
+
+    .detail-body { padding: 16px 18px 18px; }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 104px 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .kv span { color: var(--muted); }
+    .kv b { color: var(--ink); }
+
+    .stepper {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdff;
+    }
+
+    .step-no {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #eaf3ff;
+      color: var(--blue);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .step b { display: block; font-size: 13px; }
+    .step span { color: var(--muted); font-size: 12px; }
+
+    .calculator {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .calc-row {
+      display: grid;
+      grid-template-columns: 1fr 130px;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .calc-row input {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+      text-align: right;
+    }
+
+    .total {
+      padding: 12px;
+      border-radius: 8px;
+      background: #10243f;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      font-weight: 900;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: #10243f;
+      color: #fff;
+      padding: 13px 16px;
+      border-radius: 8px;
+      box-shadow: 0 18px 40px rgba(16,36,63,.26);
+      display: none;
+      font-size: 14px;
+      z-index: 20;
+    }
+
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(16,36,63,.38);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 15;
+    }
+
+    .modal {
+      width: 760px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 28px 70px rgba(16,36,63,.28);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      height: 60px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-head h3 { margin: 0; }
+
+    .modal-body {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .form-field { display: grid; gap: 6px; }
+    .form-field label { color: var(--muted); font-size: 13px; font-weight: 800; }
+    .form-field input, .form-field select, .form-field textarea {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 10px;
+    }
+    .form-field textarea {
+      min-height: 84px;
+      padding: 10px;
+      resize: vertical;
+    }
+    .wide { grid-column: 1 / -1; }
+
+    .modal-foot {
+      height: 64px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 13px 18px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div><b>终端运营管理</b><span>授权许可后台</span></div>
+      </div>
+      <div class="nav-title">业务办理</div>
+      <div class="nav-item active" data-view="dashboard"><span class="dot"></span>许可授权台账</div>
+      <div class="nav-item" data-view="applications"><span class="dot"></span>许可申请办理</div>
+      <div class="nav-item" data-view="fees"><span class="dot"></span>费用核算结算</div>
+      <div class="nav-item" data-view="renewal"><span class="dot"></span>存续变更终止</div>
+      <div class="nav-title">基础配置</div>
+      <div class="nav-item" data-view="rules"><span class="dot"></span>收费规则配置</div>
+      <div class="nav-item" data-view="vendors"><span class="dot"></span>授权厂商产品</div>
+      <div class="nav-item" data-view="objects"><span class="dot"></span>许可对象绑定</div>
+      <div class="nav-title">外部对接</div>
+      <div class="nav-item" data-view="finance"><span class="dot"></span>财务收款确认</div>
+    </aside>
+
+    <main>
+      <header>
+        <div class="page-title"><b id="pageTitle">许可授权台账</b><span id="pageDesc">申请、审批、开通、核算、追溯一体化管理</span></div>
+        <div class="top-actions">
+          <input id="globalSearch" class="global-search" placeholder="搜索厂商、产品、许可编号">
+          <button id="exportBtn" class="btn">导出当前列表</button>
+          <button id="newBtn" class="btn primary">新建许可申请</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="metrics">
+          <div class="metric"><span>许可记录</span><strong id="mTotal">0</strong><small>三类许可统一台账</small></div>
+          <div class="metric"><span>生效授权</span><strong id="mActive">0</strong><small>已可执行授权</small></div>
+          <div class="metric"><span>待审批</span><strong id="mPending">0</strong><small>部门/法务/公司领导</small></div>
+          <div class="metric"><span>待结算金额</span><strong id="mAmount">0</strong><small>财务系统收款确认</small></div>
+          <div class="metric"><span>30 天内到期</span><strong id="mExpire">0</strong><small>需要续期或终止</small></div>
+        </div>
+
+        <div class="workspace">
+          <div class="panel">
+            <div class="panel-head">
+              <h2 id="tableTitle">许可业务列表</h2>
+              <div class="tabs">
+                <button class="tab active" data-type="全部">全部</button>
+                <button class="tab" data-type="体制协议许可">体制协议</button>
+                <button class="tab" data-type="IP 核许可">IP 核</button>
+                <button class="tab" data-type="终端软件许可">软件许可</button>
+              </div>
+            </div>
+            <div class="filters">
+              <select id="typeFilter">
+                <option>全部许可类型</option>
+                <option>体制协议许可</option>
+                <option>IP 核许可</option>
+                <option>终端软件许可</option>
+              </select>
+              <select id="statusFilter">
+                <option>全部状态</option>
+                <option>合作洽谈</option>
+                <option>计费方案</option>
+                <option>审批中</option>
+                <option>授权开通</option>
+                <option>费用核算</option>
+                <option>已生效</option>
+                <option>即将到期</option>
+              </select>
+              <input id="vendorFilter" placeholder="厂商名称">
+              <input id="productFilter" placeholder="产品名称">
+              <button id="queryBtn" class="btn primary">查询</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>许可编号</th>
+                  <th>合作厂商</th>
+                  <th>产品/对象</th>
+                  <th>许可类型</th>
+                  <th>收费模式</th>
+                  <th>费用</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="licenseRows"></tbody>
+            </table>
+          </div>
+
+          <div class="side">
+            <div class="panel">
+              <div class="panel-head"><h2>当前记录详情</h2><button id="advanceBtn" class="btn primary">推进流程</button></div>
+              <div id="detailBody" class="detail-body"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>流程节点</h2></div>
+              <div id="stepper" class="stepper"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>费用试算</h2><button id="applyCalcBtn" class="btn">写入费用</button></div>
+              <div class="calculator">
+                <div class="calc-row"><span>一次性技术授权费</span><input id="techFee" type="number" value="600000"></div>
+                <div class="calc-row"><span>单台使用授权费</span><input id="unitFee" type="number" value="180"></div>
+                <div class="calc-row"><span>周期上报台数</span><input id="unitCount" type="number" value="1200"></div>
+                <div class="calc-row"><span>软件分成费用</span><input id="shareFee" type="number" value="80000"></div>
+                <div class="total"><span>合计</span><span id="calcTotal">0</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalMask" class="modal-mask">
+    <div class="modal">
+      <div class="modal-head"><h3>新建许可申请</h3><button id="closeModal" class="btn">关闭</button></div>
+      <div class="modal-body">
+        <div class="form-field"><label>合作厂商</label><input id="formVendor" value="星联终端科技"></div>
+        <div class="form-field"><label>产品/授权对象</label><input id="formProduct" value="HT-SAT-900 整机"></div>
+        <div class="form-field"><label>许可类型</label><select id="formType"><option>体制协议许可</option><option>IP 核许可</option><option>终端软件许可</option></select></div>
+        <div class="form-field"><label>收费模式</label><select id="formFeeMode"><option>技术许可费</option><option>使用许可费</option><option>软件销售分成</option><option>移植费</option><option>平台服务费</option></select></div>
+        <div class="form-field"><label>费用金额</label><input id="formAmount" type="number" value="320000"></div>
+        <div class="form-field"><label>有效期至</label><input id="formExpire" type="date" value="2026-12-31"></div>
+        <div class="form-field wide"><label>数据上报要求</label><textarea id="formNote">厂商按月上报出货台数，系统按结算周期自动核算授权费用。</textarea></div>
+      </div>
+      <div class="modal-foot"><button id="cancelModal" class="btn">取消</button><button id="saveLicense" class="btn primary">保存并提交计费方案</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const steps = ['合作洽谈', '计费方案', '审批中', '授权开通', '费用核算', '已生效', '即将到期'];
+    const licenses = [
+      { id: 'LIC-202607-001', vendor: '星联终端科技', product: 'HT-SAT-800 整机', type: '体制协议许可', feeMode: '技术许可费', amount: 1200000, status: '已生效', expire: '2027-03-31', note: '授权范围覆盖整机产品，按合同固定总价收费。' },
+      { id: 'LIC-202607-002', vendor: '北辰芯片', product: 'BC-IPCore-3 芯片', type: 'IP 核许可', feeMode: '移植费', amount: 860000, status: '审批中', expire: '2026-12-31', note: 'IP 核根据协议植入芯片，授权绑定指定终端对象。' },
+      { id: 'LIC-202607-003', vendor: '远航设备', product: 'YH-M1 模组', type: '终端软件许可', feeMode: '软件销售分成', amount: 0, status: '费用核算', expire: '2026-10-30', note: '按月上报销售数据并计算软件分成费用。' },
+      { id: 'LIC-202607-004', vendor: '天衡终端', product: 'TH-X20 终端', type: '体制协议许可', feeMode: '使用许可费', amount: 216000, status: '授权开通', expire: '2026-09-18', note: '整机使用授权费按出货台数和单价结算。' },
+      { id: 'LIC-202607-005', vendor: '华远软件', product: 'HY-Terminal OS', type: '终端软件许可', feeMode: '平台服务费', amount: 320000, status: '已生效', expire: '2026-08-12', note: '软件平台授权使用费用，由财务系统收款确认。' },
+      { id: 'LIC-202607-006', vendor: '中天模组', product: 'ZT-MOD-7 模组', type: 'IP 核许可', feeMode: '技术许可费', amount: 480000, status: '计费方案', expire: '2027-01-15', note: '待业务经理确认一次性授权总价。' }
+    ];
+
+    let activeType = '全部';
+    let selectedId = licenses[0].id;
+    let currentView = 'dashboard';
+
+    const rowsEl = document.getElementById('licenseRows');
+    const detailBody = document.getElementById('detailBody');
+    const stepper = document.getElementById('stepper');
+    const toast = document.getElementById('toast');
+
+    function money(n) {
+      if (!n) return '按规则核算';
+      return '￥' + Number(n).toLocaleString('zh-CN');
+    }
+
+    function statusClass(status) {
+      if (status === '已生效') return 'ok';
+      if (status === '审批中' || status === '计费方案') return 'warn';
+      if (status === '即将到期') return 'bad';
+      return 'run';
+    }
+
+    function filtered() {
+      const typeValue = document.getElementById('typeFilter').value;
+      const statusValue = document.getElementById('statusFilter').value;
+      const vendorValue = document.getElementById('vendorFilter').value.trim();
+      const productValue = document.getElementById('productFilter').value.trim();
+      const globalValue = document.getElementById('globalSearch').value.trim();
+      return licenses.filter(item => {
+        const typeOk = activeType === '全部' && typeValue === '全部许可类型' || item.type === activeType || item.type === typeValue;
+        const statusOk = statusValue === '全部状态' || item.status === statusValue;
+        const vendorOk = !vendorValue || item.vendor.includes(vendorValue);
+        const productOk = !productValue || item.product.includes(productValue);
+        const globalOk = !globalValue || [item.id, item.vendor, item.product, item.type].some(v => v.includes(globalValue));
+        return typeOk && statusOk && vendorOk && productOk && globalOk;
+      });
+    }
+
+    function renderMetrics() {
+      document.getElementById('mTotal').textContent = licenses.length;
+      document.getElementById('mActive').textContent = licenses.filter(x => x.status === '已生效').length;
+      document.getElementById('mPending').textContent = licenses.filter(x => ['审批中', '计费方案'].includes(x.status)).length;
+      const pendingAmount = licenses.filter(x => ['费用核算', '授权开通'].includes(x.status)).reduce((sum, x) => sum + (x.amount || 0), 0);
+      document.getElementById('mAmount').textContent = money(pendingAmount);
+      document.getElementById('mExpire').textContent = licenses.filter(x => x.status === '即将到期' || new Date(x.expire) < new Date('2026-09-01')).length;
+    }
+
+    function renderRows() {
+      const items = filtered();
+      rowsEl.innerHTML = items.map(item => `
+        <tr class="${item.id === selectedId ? 'selected' : ''}" data-id="${item.id}">
+          <td>${item.id}</td>
+          <td>${item.vendor}</td>
+          <td>${item.product}</td>
+          <td><span class="type">${item.type}</span></td>
+          <td>${item.feeMode}</td>
+          <td><span class="money">${money(item.amount)}</span></td>
+          <td><span class="status ${statusClass(item.status)}">${item.status}</span></td>
+          <td><button class="btn" data-action="detail" data-id="${item.id}">详情</button></td>
+        </tr>
+      `).join('');
+      rowsEl.querySelectorAll('tr').forEach(row => row.addEventListener('click', () => {
+        selectedId = row.dataset.id;
+        renderAll();
+      }));
+    }
+
+    function current() {
+      return licenses.find(x => x.id === selectedId) || licenses[0];
+    }
+
+    function renderDetail() {
+      const item = current();
+      detailBody.innerHTML = `
+        <div class="kv"><span>许可编号</span><b>${item.id}</b></div>
+        <div class="kv"><span>合作厂商</span><b>${item.vendor}</b></div>
+        <div class="kv"><span>授权对象</span><b>${item.product}</b></div>
+        <div class="kv"><span>许可类型</span><b>${item.type}</b></div>
+        <div class="kv"><span>收费模式</span><b>${item.feeMode}</b></div>
+        <div class="kv"><span>费用金额</span><b>${money(item.amount)}</b></div>
+        <div class="kv"><span>有效期至</span><b>${item.expire}</b></div>
+        <div class="kv"><span>当前状态</span><b>${item.status}</b></div>
+        <div class="kv"><span>说明</span><b>${item.note}</b></div>
+      `;
+    }
+
+    function renderStepper() {
+      const item = current();
+      const currentIndex = Math.max(0, steps.indexOf(item.status));
+      stepper.innerHTML = steps.slice(0, 6).map((step, index) => `
+        <div class="step">
+          <div class="step-no">${index + 1}</div>
+          <div><b>${step}</b><span>${index < currentIndex ? '已完成' : index === currentIndex ? '当前节点' : '待处理'}</span></div>
+          <span class="status ${index < currentIndex ? 'ok' : index === currentIndex ? 'run' : 'warn'}">${index < currentIndex ? '完成' : index === currentIndex ? '进行中' : '待办'}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderViewMeta() {
+      const map = {
+        dashboard: ['许可授权台账', '申请、审批、开通、核算、追溯一体化管理'],
+        applications: ['许可申请办理', '新建申请、材料维护、审批提交'],
+        fees: ['费用核算结算', '出货上报、费用试算、结算单与财务确认'],
+        renewal: ['存续变更终止', '续期、变更、终止和历史归档'],
+        rules: ['收费规则配置', '技术授权费、使用授权费、软件分成规则'],
+        vendors: ['授权厂商产品', '厂商、产品和许可对象关联维护'],
+        objects: ['许可对象绑定', 'IP 核和终端软件授权对象绑定'],
+        finance: ['财务收款确认', '本系统记录费用，财务系统回写收款状态']
+      };
+      document.getElementById('pageTitle').textContent = map[currentView][0];
+      document.getElementById('pageDesc').textContent = map[currentView][1];
+      document.getElementById('tableTitle').textContent = map[currentView][0] + '列表';
+    }
+
+    function renderAll() {
+      renderViewMeta();
+      renderMetrics();
+      renderRows();
+      renderDetail();
+      renderStepper();
+      calc();
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 2200);
+    }
+
+    function calc() {
+      const total = ['techFee', 'unitFee', 'unitCount', 'shareFee'].reduce((_, id) => _, 0);
+      const tech = Number(document.getElementById('techFee').value || 0);
+      const unit = Number(document.getElementById('unitFee').value || 0);
+      const count = Number(document.getElementById('unitCount').value || 0);
+      const share = Number(document.getElementById('shareFee').value || 0);
+      document.getElementById('calcTotal').textContent = money(tech + unit * count + share);
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+        item.classList.add('active');
+        currentView = item.dataset.view;
+        renderAll();
+        showToast('已切换到：' + document.getElementById('pageTitle').textContent);
+      });
+    });
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+        tab.classList.add('active');
+        activeType = tab.dataset.type;
+        renderRows();
+      });
+    });
+
+    ['queryBtn', 'globalSearch', 'typeFilter', 'statusFilter', 'vendorFilter', 'productFilter'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener(id === 'queryBtn' ? 'click' : 'input', renderRows);
+      if (el.tagName === 'SELECT') el.addEventListener('change', renderRows);
+    });
+
+    document.getElementById('newBtn').addEventListener('click', () => document.getElementById('modalMask').style.display = 'flex');
+    document.getElementById('closeModal').addEventListener('click', () => document.getElementById('modalMask').style.display = 'none');
+    document.getElementById('cancelModal').addEventListener('click', () => document.getElementById('modalMask').style.display = 'none');
+    document.getElementById('saveLicense').addEventListener('click', () => {
+      const next = {
+        id: 'LIC-202607-' + String(licenses.length + 1).padStart(3, '0'),
+        vendor: document.getElementById('formVendor').value,
+        product: document.getElementById('formProduct').value,
+        type: document.getElementById('formType').value,
+        feeMode: document.getElementById('formFeeMode').value,
+        amount: Number(document.getElementById('formAmount').value || 0),
+        status: '计费方案',
+        expire: document.getElementById('formExpire').value,
+        note: document.getElementById('formNote').value
+      };
+      licenses.unshift(next);
+      selectedId = next.id;
+      document.getElementById('modalMask').style.display = 'none';
+      renderAll();
+      showToast('已保存许可申请，并进入计费方案节点');
+    });
+
+    document.getElementById('advanceBtn').addEventListener('click', () => {
+      const item = current();
+      const idx = steps.indexOf(item.status);
+      if (idx >= 0 && idx < 5) item.status = steps[idx + 1];
+      else item.status = '即将到期';
+      renderAll();
+      showToast('流程已推进到：' + item.status);
+    });
+
+    ['techFee', 'unitFee', 'unitCount', 'shareFee'].forEach(id => document.getElementById(id).addEventListener('input', calc));
+    document.getElementById('applyCalcBtn').addEventListener('click', () => {
+      const item = current();
+      item.amount = Number(document.getElementById('techFee').value || 0) + Number(document.getElementById('unitFee').value || 0) * Number(document.getElementById('unitCount').value || 0) + Number(document.getElementById('shareFee').value || 0);
+      item.status = '费用核算';
+      renderAll();
+      showToast('费用试算结果已写入当前许可记录');
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const csv = ['许可编号,合作厂商,产品,许可类型,收费模式,费用,状态'].concat(filtered().map(x => [x.id, x.vendor, x.product, x.type, x.feeMode, x.amount, x.status].join(','))).join('\\n');
+      const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '许可授权台账.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('已导出当前列表');
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
