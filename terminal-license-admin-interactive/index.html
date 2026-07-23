@@ -190,6 +190,92 @@
     .metric strong { display: block; margin-top: 8px; font-size: 25px; }
     .metric small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
 
+    .module-board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .module-card {
+      min-height: 150px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(31,46,71,.06);
+      padding: 14px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .module-card.wide { grid-column: span 2; }
+    .module-card.full { grid-column: 1 / -1; }
+
+    .module-card h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .module-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .mini-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .mini-list li {
+      min-height: 34px;
+      border: 1px solid #edf1f6;
+      border-radius: 8px;
+      background: #f8fafc;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .module-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .data-cell {
+      min-height: 68px;
+      border: 1px solid #edf1f6;
+      border-radius: 8px;
+      background: #fbfdff;
+      padding: 10px;
+    }
+
+    .data-cell span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .data-cell b { font-size: 15px; }
+
     .workspace {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 320px;
@@ -425,7 +511,7 @@
       padding: 10px;
       resize: vertical;
     }
-    .wide { grid-column: 1 / -1; }
+    .form-field.wide { grid-column: 1 / -1; }
 
     .modal-foot {
       height: 64px;
@@ -477,6 +563,8 @@
           <div class="metric"><span>待结算金额</span><strong id="mAmount">0</strong><small>财务系统收款确认</small></div>
           <div class="metric"><span>30 天内到期</span><strong id="mExpire">0</strong><small>需要续期或终止</small></div>
         </div>
+
+        <div id="moduleBoard" class="module-board"></div>
 
         <div class="workspace">
           <div class="panel">
@@ -588,6 +676,7 @@
     const rowsEl = document.getElementById('licenseRows');
     const detailBody = document.getElementById('detailBody');
     const stepper = document.getElementById('stepper');
+    const moduleBoard = document.getElementById('moduleBoard');
     const toast = document.getElementById('toast');
 
     function money(n) {
@@ -694,9 +783,193 @@
       document.getElementById('tableTitle').textContent = map[currentView][0] + '列表';
     }
 
+    function renderModuleBoard() {
+      const content = {
+        dashboard: `
+          <div class="module-card wide">
+            <h3>许可业务总览</h3>
+            <p>统一承载体制协议许可、IP 核许可、终端软件许可三类授权，从厂商洽谈、计费方案、合同审批、资料交付到费用结算形成完整闭环。</p>
+            <div class="data-grid">
+              <div class="data-cell"><span>许可类型</span><b>3 类</b></div>
+              <div class="data-cell"><span>收费方式</span><b>5 种</b></div>
+              <div class="data-cell"><span>授权对象</span><b>整机/芯片/软件</b></div>
+              <div class="data-cell"><span>追溯能力</span><b>合同、费用、记录</b></div>
+            </div>
+          </div>
+          <div class="module-card">
+            <h3>快捷办理</h3>
+            <div class="module-actions">
+              <button class="btn primary" data-module-action="new">新建申请</button>
+              <button class="btn" data-module-action="advance">推进当前记录</button>
+              <button class="btn" data-module-action="export">导出台账</button>
+            </div>
+          </div>
+        `,
+        applications: `
+          <div class="module-card">
+            <h3>申请信息录入</h3>
+            <ul class="mini-list">
+              <li><span>合作厂商</span><b>必填</b></li>
+              <li><span>授权对象</span><b>产品/芯片/软件</b></li>
+              <li><span>许可类型</span><b>三类可选</b></li>
+            </ul>
+            <button class="btn primary" data-module-action="new">录入许可申请</button>
+          </div>
+          <div class="module-card">
+            <h3>申请材料维护</h3>
+            <ul class="mini-list">
+              <li><span>合作洽谈纪要</span><b>已建档</b></li>
+              <li><span>授权对象清单</span><b>待确认</b></li>
+              <li><span>数据上报要求</span><b>可编辑</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>审批提交</h3>
+            <p>申请完成后提交业务经理复核，自动带出许可主题、授权对象、授权类型和材料完整性检查结果。</p>
+            <button class="btn" data-module-action="advance">提交下一节点</button>
+          </div>
+        `,
+        fees: `
+          <div class="module-card">
+            <h3>收费类型管理</h3>
+            <ul class="mini-list">
+              <li><span>技术许可费</span><b>一次性</b></li>
+              <li><span>使用许可费</span><b>按台数</b></li>
+              <li><span>软件销售分成</span><b>按比例</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>周期费用核算</h3>
+            <p>录入厂商周期出货台数，系统按授权单价、结算周期、分成规则自动生成费用金额。</p>
+            <button class="btn primary" data-module-action="calc">试算并写入</button>
+          </div>
+          <div class="module-card">
+            <h3>结算单管理</h3>
+            <ul class="mini-list">
+              <li><span>待出具结算单</span><b>2 条</b></li>
+              <li><span>待财务确认</span><b>1 条</b></li>
+              <li><span>已完成归档</span><b>3 条</b></li>
+            </ul>
+          </div>
+        `,
+        renewal: `
+          <div class="module-card">
+            <h3>存续提醒</h3>
+            <ul class="mini-list">
+              <li><span>30 天内到期</span><b>${licenses.filter(x => x.status === '即将到期' || new Date(x.expire) < new Date('2026-09-01')).length} 条</b></li>
+              <li><span>需补充上报数据</span><b>2 条</b></li>
+              <li><span>合同即将失效</span><b>1 条</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>变更办理</h3>
+            <p>支持授权范围、收费标准、结算周期、授权对象、合同有效期变更，形成变更记录并保留原授权版本。</p>
+            <button class="btn" data-module-action="advance">发起变更</button>
+          </div>
+          <div class="module-card">
+            <h3>终止归档</h3>
+            <p>终止后冻结费用核算、资料交付和授权执行，保留厂商、产品、费用和审批记录用于追溯。</p>
+          </div>
+        `,
+        rules: `
+          <div class="module-card">
+            <h3>收费规则配置</h3>
+            <ul class="mini-list">
+              <li><span>体制协议许可</span><b>技术费 + 使用费</b></li>
+              <li><span>IP 核许可</span><b>移植费 + 授权费</b></li>
+              <li><span>终端软件许可</span><b>销售分成</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>收费标准版本</h3>
+            <ul class="mini-list">
+              <li><span>V2026.07</span><b>当前生效</b></li>
+              <li><span>V2026.05</span><b>历史归档</b></li>
+              <li><span>V2026.08</span><b>草稿</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>规则动作</h3>
+            <div class="module-actions">
+              <button class="btn primary" data-module-action="toast">新增收费规则</button>
+              <button class="btn" data-module-action="toast">发布新版本</button>
+            </div>
+          </div>
+        `,
+        vendors: `
+          <div class="module-card">
+            <h3>授权厂商管理</h3>
+            <ul class="mini-list">
+              <li><span>星联终端科技</span><b>已授权</b></li>
+              <li><span>北辰芯片</span><b>审批中</b></li>
+              <li><span>华远软件</span><b>已授权</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>授权产品管理</h3>
+            <p>维护整机、芯片、模组、终端软件等产品基础信息，并建立厂商与产品的授权关系。</p>
+            <button class="btn primary" data-module-action="toast">新增厂商产品</button>
+          </div>
+          <div class="module-card">
+            <h3>厂商产品关联</h3>
+            <ul class="mini-list">
+              <li><span>厂商-产品绑定</span><b>12 条</b></li>
+              <li><span>待复核关系</span><b>2 条</b></li>
+              <li><span>历史解除关系</span><b>1 条</b></li>
+            </ul>
+          </div>
+        `,
+        objects: `
+          <div class="module-card">
+            <h3>许可对象管理</h3>
+            <p>统一维护授权对象清单，支持绑定终端产品、IP 核对象、终端软件对象和适用产品范围。</p>
+            <button class="btn primary" data-module-action="toast">新增许可对象</button>
+          </div>
+          <div class="module-card">
+            <h3>IP 核授权对象绑定</h3>
+            <ul class="mini-list">
+              <li><span>BC-IPCore-3</span><b>绑定芯片</b></li>
+              <li><span>ZT-CoreLite</span><b>绑定模组</b></li>
+              <li><span>HX-Baseband</span><b>待确认</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>终端软件授权对象绑定</h3>
+            <ul class="mini-list">
+              <li><span>HY-Terminal OS</span><b>平台软件</b></li>
+              <li><span>导航增强算法</span><b>算法组件</b></li>
+              <li><span>远程运维工具</span><b>工具软件</b></li>
+            </ul>
+          </div>
+        `,
+        finance: `
+          <div class="module-card">
+            <h3>收款确认对接</h3>
+            <p>本系统记录许可费用、结算单和应收信息，财务系统完成实收确认后回写收款状态和凭证编号。</p>
+            <button class="btn primary" data-module-action="toast">同步财务状态</button>
+          </div>
+          <div class="module-card">
+            <h3>应收记录</h3>
+            <ul class="mini-list">
+              <li><span>待确认收款</span><b>￥216,000</b></li>
+              <li><span>本月已确认</span><b>￥1,520,000</b></li>
+              <li><span>异常待处理</span><b>1 条</b></li>
+            </ul>
+          </div>
+          <div class="module-card">
+            <h3>费用追溯</h3>
+            <p>按许可编号追溯申请、合同、计费规则、结算单、财务确认、授权生效全过程。</p>
+            <button class="btn" data-module-action="export">导出费用记录</button>
+          </div>
+        `
+      };
+      moduleBoard.innerHTML = content[currentView] || content.dashboard;
+    }
+
     function renderAll() {
       renderViewMeta();
       renderMetrics();
+      renderModuleBoard();
       renderRows();
       renderDetail();
       renderStepper();
@@ -726,6 +999,16 @@
         renderAll();
         showToast('已切换到：' + document.getElementById('pageTitle').textContent);
       });
+    });
+
+    moduleBoard.addEventListener('click', event => {
+      const action = event.target.dataset.moduleAction;
+      if (!action) return;
+      if (action === 'new') document.getElementById('modalMask').style.display = 'flex';
+      if (action === 'advance') document.getElementById('advanceBtn').click();
+      if (action === 'calc') document.getElementById('applyCalcBtn').click();
+      if (action === 'export') document.getElementById('exportBtn').click();
+      if (action === 'toast') showToast('已进入对应维护操作，可继续扩展表单字段');
     });
 
     document.querySelectorAll('.tab').forEach(tab => {
